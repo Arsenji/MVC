@@ -19,7 +19,7 @@ class Router
 
     public function add($route, $params) // Добавление маршрута
     {
-        $route = '#^'.$route.'$#';
+        $route = '#^' . $route . '$#';
         $this->routes[$route] = $params;
     }
 
@@ -34,31 +34,23 @@ class Router
         }
         return false;
     }
-
     public function run() //Запускает Router
     {
-        if ($this->match())
-        {
+        if ($this->match()) {
             $path = 'application\controllers\\' . ucfirst($this->params['controller']) . 'Controller';
-            if(class_exists($path))
-            {
-                $action = $this->params['action'].'Action';
-                if(method_exists($path, $action))
-                {
+            if (class_exists($path)) {
+                $action = $this->params['action'] . 'Action';
+                if (method_exists($path, $action)) {
                     $controller = new $path($this->params);
-                    $controller -> $action();
-                }else
-                {
+                    $controller->$action();
+                } else {
                     View::errorCode(404);
                 }
-            }else
-            {
+            } else {
                 View::errorCode(404);
             }
-        }else
-        {
+        } else {
             View::errorCode(404);
         }
     }
-
 }

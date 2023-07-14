@@ -17,8 +17,8 @@
                                             <input type="text" placeholder="Search and hit enter..." name="s" id="s"/>
                                         </div>
                                     </form>
-                                    <p class="go-back-home"><a href="application/views/account/login.php">
-                                            Back to Home Page</a></p>
+                                    <p class="go-back-home">
+                                        <a href="login.php">Back to Home Page</a></p>
                                 </div>
                             </div>
 

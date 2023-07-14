@@ -12,7 +12,6 @@ namespace application\core;
         $this->route = $route;
         $this->path = $route['controller'] . '/' . $route['action'];
     }
-
     public function render($title, $vars = [])
     {
         extract($vars);
