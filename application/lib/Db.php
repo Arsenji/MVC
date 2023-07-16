@@ -39,4 +39,20 @@ class Db
         $result = $this->query($sql, $params);
         return $result->fetchColumn();
     }
+
+    public function queryFor($sql)
+    {
+        return $this->db->query($sql);
+    }
+
+    public function fetchAll($sql)
+    {
+        $result = $this->queryFor($sql);
+        $data = [];
+        while ($row = $result->fetch_assoc()) {
+            $data[] = $row;
+        }
+        return $data;
+    }
+
 }

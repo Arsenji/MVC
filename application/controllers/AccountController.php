@@ -1,5 +1,7 @@
 <?php
+
 namespace application\controllers;
+
 use application\core\Controller;
 use application\core\View;
 use application\models\User;
@@ -12,6 +14,7 @@ class AccountController extends Controller
 {
     public $authView;
     public $userModel;
+    public $data;
 
     public function __construct()
     {
@@ -21,33 +24,22 @@ class AccountController extends Controller
 
     public function loginAction()
     {
-        $data = [
-            'login' => $_POST['login'],
-        'password' => $_POST['password'],
-        ];
-        // Проверка существования пользователя в базе данных
-        $user = $this->userModel->getUserByUsername();
-
-        if ($user) {
-            // Пользователь существует
-            if (password_verify($data['password'], $user['password'])) {
-                // Успешная аутентификация
-                $_SESSION['login'] = $data['login'];
-              header('Location: /index.php'); // Перенаправляем на страницу после успешной аутентификации
-                exit();
+        if (isset($_POST['login']) && isset($_POST['password'])) {
+            $this->data = [
+                'login' => $_POST['login'],
+                'password' => $_POST['password'],
+            ];
+            $this->userModel->dbConnect($this->data);
+            $this->userModel->getUserByUsername($this->data['login'], $this->data['password']);
+            exit;
         }
-            else
-            {
-            // Пользователь не существует, добавляем его автоматически
-            $this->userModel->hashPassword($data);
-
-            // Успешная аутентификация
+        else
+        {
+            $this->userModel->createUser($this->userModel->login);
             $_SESSION['login'] = $this->userModel->login;
-            $this->userModel->authenticated();
-            header('Location: /index.php'); // Перенаправляем на страницу после успешной аутентификации
-            }
-            exit();
         }
+        $this->userModel->authenticated();
     }
 }
+
 

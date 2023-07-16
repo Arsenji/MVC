@@ -1,20 +1,27 @@
 <?php
+
 namespace application\models;
+
 use application\core\Model;
 
 require_once 'application/core/Model.php';
+
 class User extends Model
 {
     public $data;
     private $conn;
     public $result;
-    public $stored_hash;
     public $login;
     public $password;
     public $registrationDate;
     public $sql;
+    private $hash_password;
 
-    public function dbConnect()
+    /**
+     * @var false|string|null
+     */
+
+    public function dbConnect($data)
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $config = require 'application/config/db.php';
@@ -23,44 +30,58 @@ class User extends Model
             if (!$this->conn) {
                 die('Ошибка подключения к базе данных: ' . mysqli_connect_error());
             }
+            $this->login = $data['login'];
+            $this->password = $data['password'];
+            $this->registrationDate = date('Y-m-d');
         }
+        $this->hashPassword($this->password);
     }
-
-    public function getFormData($data)
+    public function createUser($login)
     {
-        $this->login = $data['login'];
-        $this->password = $data['password'];
-        $this->registrationDate = date('Y-m-d');
-    }
-
-    public function getUserByUsername()
-    {
-        $this->dbConnect();
-        $this->sql = "SELECT * FROM tasklist.users WHERE login = '$this->login'";
-        $this->result = mysqli_query($this->conn, $this->sql);
-    }
-
-    public function createUser()
-    {
-        $this->getFormData($this->data);
-        $this->dbConnect();
-        $this->sql = "INSERT INTO tasklist.users (login, password, created_at) VALUES ('$this->login', '$this->hash_password', '$this->registrationDate')";
+        $this->login = $login;
+        $this->dbConnect($this->data);
+        $this->sql = "INSERT INTO tasklist.users (login, password, created_at) VALUES ('$login', '$this->hash_password', '$this->registrationDate')";
         mysqli_query($this->conn, $this->sql);
         $user_id = mysqli_insert_id($this->conn);
         $_SESSION['user_id'] = $user_id;
-
-        //header("location: index.php");
     }
+    public function getUserByUsername($login, $password)
+    {
+        $this->login = $login;
+        $this->password = $password;
+        $this->dbConnect($this->data);
+        $this->sql = "SELECT * FROM tasklist.users WHERE login = '$login'";
+        $this->result = mysqli_query($this->conn, $this->sql);
+        if (mysqli_num_rows($this->result) == 1) {
+            $row = mysqli_fetch_assoc($this->result);
+            $storedHash = $row['password'];
+            if (password_verify($password, $storedHash)) {
+                // Авторизация успешна
+                $_SESSION['login'] = $login;
+                $_SESSION['password'] = $password;
+                header("location: main/index");
+                exit();
+            }
+        } else {
+            echo 'Пользователь не найден';
+        }
+        debug($this->conn);
+    }
+
 
     public function authenticated()
     {
-        $authenticated =true;
+        $authenticated = true;
         $_SESSION['authenticated'] = $authenticated;
     }
 
-    public function hashPassword($data)
+    public function hashPassword($password)
     {
-        $this->hash_password = password_hash($data['password'], PASSWORD_BCRYPT);
-        $this->createUser();
+        $this->password = $password;
+        if ($password !== null) {
+            $this->hash_password = password_hash($password, PASSWORD_BCRYPT);
+            $this->createUser($this->login);
+        }
     }
+
 }
